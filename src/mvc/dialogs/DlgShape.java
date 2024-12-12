@@ -48,6 +48,10 @@ public abstract class DlgShape extends JDialog {
 
 	protected abstract boolean validateInput();
 
+	public boolean isInputValid() {
+		return validateInput();
+	}
+
 	public boolean isConfirmed() {
 		return confirmed;
 	}
