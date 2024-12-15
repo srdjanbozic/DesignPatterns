@@ -6,6 +6,10 @@ import java.awt.event.MouseListener;
 
 import javax.swing.JFrame;
 
+import command.AddShapeCommand;
+import command.Command;
+import command.CommandInvoker;
+import command.SelectShapeCommand;
 import mvc.DrawingState;
 import mvc.dialogs.DlgCircle;
 import mvc.dialogs.DlgDonut;
@@ -28,10 +32,12 @@ public class DrawingController {
 	private Point startPoint;
 	private Color currentEdgeColor = Color.BLACK;
 	private Color currentFillColor = Color.WHITE;
+	private CommandInvoker commandInvoker;
 
 	public DrawingController(DrawingModel model, DrawingView view) {
 		this.model = model;
 		this.view = view;
+		this.commandInvoker = new CommandInvoker();
 		initMouseListeners();
 	}
 
@@ -97,21 +103,26 @@ public class DrawingController {
 	}
 
 	private void handleSelection(MouseEvent e, Point clickPoint) {
-		if (!e.isShiftDown()) {
-			model.clearSelection();
-		}
-
+		Shape selectedShape = null;
 		for (Shape shape : model.getShapes()) {
 			if (shape.contains(clickPoint.getX(), clickPoint.getY())) {
-				model.addToSelection(shape);
+				selectedShape = shape;
 				break;
 			}
+		}
+
+		if (selectedShape != null) {
+			Command command = new SelectShapeCommand(model, selectedShape, e.isShiftDown());
+			commandInvoker.executeCommand(command);
+		} else if (!e.isShiftDown()) {
+			model.clearSelection();
 		}
 	}
 
 	private void handlePointDrawing(Point clickPoint) {
 		clickPoint.setEdgeColor(currentEdgeColor);
-		model.add(clickPoint);
+		Command command = new AddShapeCommand(model, clickPoint);
+		commandInvoker.executeCommand(command);
 	}
 
 	private void handleLineDrawing(Point clickPoint) {
@@ -120,7 +131,8 @@ public class DrawingController {
 		} else {
 			Line line = new Line(startPoint, clickPoint);
 			line.setEdgeColor(currentEdgeColor);
-			model.add(line);
+			Command command = new AddShapeCommand(model, line);
+			commandInvoker.executeCommand(command);
 			startPoint = null;
 		}
 	}
@@ -130,10 +142,15 @@ public class DrawingController {
 		dialog.setVisible(true);
 
 		if (dialog.isConfirmed()) {
-			Rectangle rectangle = new Rectangle(clickPoint, dialog.getHeight(), dialog.getWidth());
-			rectangle.setEdgeColor(dialog.getEdgeColor());
-			rectangle.setFillColor(dialog.getFillColor());
-			model.add(rectangle);
+			try {
+				Rectangle rectangle = new Rectangle(clickPoint, dialog.getHeight(), dialog.getWidth());
+				rectangle.setEdgeColor(dialog.getEdgeColor());
+				rectangle.setFillColor(dialog.getFillColor());
+				Command command = new AddShapeCommand(model, rectangle);
+				commandInvoker.executeCommand(command);
+			} catch (Exception ex) {
+				System.err.println("Error creating rectangle: " + ex.getMessage());
+			}
 		}
 	}
 
@@ -145,7 +162,8 @@ public class DrawingController {
 			Circle circle = new Circle(clickPoint, dialog.getRadius());
 			circle.setEdgeColor(dialog.getEdgeColor());
 			circle.setFillColor(dialog.getFillColor());
-			model.add(circle);
+			Command command = new AddShapeCommand(model, circle);
+			commandInvoker.executeCommand(command);
 		}
 	}
 
@@ -157,7 +175,8 @@ public class DrawingController {
 			Donut donut = new Donut(clickPoint, dialog.getOuterRadius(), dialog.getInnerRadius());
 			donut.setEdgeColor(dialog.getEdgeColor());
 			donut.setFillColor(dialog.getFillColor());
-			model.add(donut);
+			Command command = new AddShapeCommand(model, donut);
+			commandInvoker.executeCommand(command);
 		}
 	}
 
@@ -169,7 +188,22 @@ public class DrawingController {
 			HexagonAdapter hexagon = new HexagonAdapter(clickPoint, dialog.getRadius());
 			hexagon.setEdgeColor(dialog.getEdgeColor());
 			hexagon.setFillColor(dialog.getFillColor());
-			model.add(hexagon);
+			Command command = new AddShapeCommand(model, hexagon);
+			commandInvoker.executeCommand(command);
+		}
+	}
+
+	public void undo() {
+		if (commandInvoker.isUndoAvailable()) {
+			commandInvoker.undo();
+			view.repaint();
+		}
+	}
+
+	public void redo() {
+		if (commandInvoker.isRedoAvailable()) {
+			commandInvoker.redo();
+			view.repaint();
 		}
 	}
 

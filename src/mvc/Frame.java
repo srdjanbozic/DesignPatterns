@@ -3,7 +3,7 @@ package mvc;
 import java.awt.BorderLayout;
 import java.awt.Container;
 
-import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
@@ -25,6 +25,9 @@ public class Frame extends JFrame {
 	private JToggleButton tglDonut;
 	private JToggleButton tglHexagon;
 
+	private JButton btnUndo;
+	private JButton btnRedo;
+
 	public Frame() {
 		setTitle("Design Patterns Drawing App");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -39,10 +42,13 @@ public class Frame extends JFrame {
 		view = new DrawingView(model);
 		controller = new DrawingController(model, view);
 
-		// Create toolbar with shape buttons
-		JPanel toolbar = new JPanel();
-		ButtonGroup btnGroup = new ButtonGroup();
+		// Create main toolbar panel
+		JPanel toolbarPanel = new JPanel(new BorderLayout());
 
+		// Create shape buttons panel
+		JPanel shapeButtons = new JPanel();
+
+		// Initialize toggle buttons
 		tglSelect = new JToggleButton("Select");
 		tglPoint = new JToggleButton("Point");
 		tglLine = new JToggleButton("Line");
@@ -51,37 +57,36 @@ public class Frame extends JFrame {
 		tglDonut = new JToggleButton("Donut");
 		tglHexagon = new JToggleButton("Hexagon");
 
-		btnGroup.add(tglSelect);
-		btnGroup.add(tglPoint);
-		btnGroup.add(tglLine);
-		btnGroup.add(tglRectangle);
-		btnGroup.add(tglCircle);
-		btnGroup.add(tglDonut);
-		btnGroup.add(tglHexagon);
+		// Add buttons to shape panel
+		shapeButtons.add(tglSelect);
+		shapeButtons.add(tglPoint);
+		shapeButtons.add(tglLine);
+		shapeButtons.add(tglRectangle);
+		shapeButtons.add(tglCircle);
+		shapeButtons.add(tglDonut);
+		shapeButtons.add(tglHexagon);
 
-		toolbar.add(tglSelect);
-		toolbar.add(tglPoint);
-		toolbar.add(tglLine);
-		toolbar.add(tglRectangle);
-		toolbar.add(tglCircle);
-		toolbar.add(tglDonut);
-		toolbar.add(tglHexagon);
+		toolbarPanel.add(shapeButtons, BorderLayout.WEST);
 
-		// Add components to frame
+		// Create and add undo/redo panel
+		JPanel undoRedoPanel = new JPanel();
+		btnUndo = new JButton("Undo");
+		btnRedo = new JButton("Redo");
+
+		btnUndo.addActionListener(e -> controller.undo());
+		btnRedo.addActionListener(e -> controller.redo());
+
+		undoRedoPanel.add(btnUndo);
+		undoRedoPanel.add(btnRedo);
+		toolbarPanel.add(undoRedoPanel, BorderLayout.EAST);
+
+		// Add panels to frame
 		Container contentPane = getContentPane();
-		contentPane.add(toolbar, BorderLayout.NORTH);
+		contentPane.add(toolbarPanel, BorderLayout.NORTH);
 		contentPane.add(view, BorderLayout.CENTER);
-
-		// Add button action listeners
-		tglSelect.addActionListener(e -> controller.setCurrentState(DrawingState.SELECT));
-		tglPoint.addActionListener(e -> controller.setCurrentState(DrawingState.POINT));
-		tglLine.addActionListener(e -> controller.setCurrentState(DrawingState.LINE));
-		tglRectangle.addActionListener(e -> controller.setCurrentState(DrawingState.RECTANGLE));
-		tglCircle.addActionListener(e -> controller.setCurrentState(DrawingState.CIRCLE));
-		tglDonut.addActionListener(e -> controller.setCurrentState(DrawingState.DONUT));
-		tglHexagon.addActionListener(e -> controller.setCurrentState(DrawingState.HEXAGON));
 	}
 
+	// Add main method
 	public static void main(String[] args) {
 		Frame frame = new Frame();
 		frame.setVisible(true);
