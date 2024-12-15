@@ -9,9 +9,11 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
+import command.log.Logger;
 import mvc.controller.DrawingController;
 import mvc.model.DrawingModel;
 import mvc.view.DrawingView;
+import mvc.view.LogPanel;
 
 public class Frame extends JFrame {
 	private DrawingModel model;
@@ -28,6 +30,7 @@ public class Frame extends JFrame {
 
 	private JButton btnUndo;
 	private JButton btnRedo;
+	private LogPanel logPanel;
 
 	public Frame() {
 		setTitle("Design Patterns Drawing App");
@@ -104,6 +107,10 @@ public class Frame extends JFrame {
 		Container contentPane = getContentPane();
 		contentPane.add(toolbarPanel, BorderLayout.NORTH);
 		contentPane.add(view, BorderLayout.CENTER);
+		logPanel = new LogPanel();
+		contentPane.add(logPanel, BorderLayout.EAST);
+		// In Frame's initializeComponents(), after creating logPanel:
+		Logger.getInstance().addObserver(logPanel);
 	}
 
 	// Add main method
