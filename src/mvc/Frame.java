@@ -3,6 +3,7 @@ package mvc;
 import java.awt.BorderLayout;
 import java.awt.Container;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -65,6 +66,25 @@ public class Frame extends JFrame {
 		shapeButtons.add(tglCircle);
 		shapeButtons.add(tglDonut);
 		shapeButtons.add(tglHexagon);
+
+		// Add buttons to button group
+		ButtonGroup btnGroup = new ButtonGroup();
+		btnGroup.add(tglSelect);
+		btnGroup.add(tglPoint);
+		btnGroup.add(tglLine);
+		btnGroup.add(tglRectangle);
+		btnGroup.add(tglCircle);
+		btnGroup.add(tglDonut);
+		btnGroup.add(tglHexagon);
+
+		// Add action listeners
+		tglSelect.addActionListener(e -> controller.setCurrentState(DrawingState.SELECT));
+		tglPoint.addActionListener(e -> controller.setCurrentState(DrawingState.POINT));
+		tglLine.addActionListener(e -> controller.setCurrentState(DrawingState.LINE));
+		tglRectangle.addActionListener(e -> controller.setCurrentState(DrawingState.RECTANGLE));
+		tglCircle.addActionListener(e -> controller.setCurrentState(DrawingState.CIRCLE));
+		tglDonut.addActionListener(e -> controller.setCurrentState(DrawingState.DONUT));
+		tglHexagon.addActionListener(e -> controller.setCurrentState(DrawingState.HEXAGON));
 
 		toolbarPanel.add(shapeButtons, BorderLayout.WEST);
 
