@@ -89,7 +89,8 @@ public class Line extends Shape {
 
 	@Override
 	public String toString() {
-		return String.format("Line[%s-->%s,edgeColor=rgb(%d,%d,%d)]", startPoint, endPoint, getEdgeColor().getRed(),
-				getEdgeColor().getGreen(), getEdgeColor().getBlue());
+		return String.format("Line[%s-->%s,edgeColor=rgb(%d,%d,%d)]", startPoint.getX(), startPoint.getY(),
+				endPoint.getX(), endPoint.getY(), getEdgeColor().getRed(), getEdgeColor().getGreen(),
+				getEdgeColor().getBlue());
 	}
 }
