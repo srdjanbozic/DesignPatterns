@@ -3,17 +3,24 @@ package mvc.controller;
 import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 
 import command.AddShapeCommand;
 import command.Command;
 import command.CommandInvoker;
+import command.RemoveShapeCommand;
 import command.SelectShapeCommand;
+import command.UpdateShapeCommand;
 import mvc.DrawingState;
+import mvc.Frame;
 import mvc.dialogs.DlgCircle;
 import mvc.dialogs.DlgDonut;
 import mvc.dialogs.DlgHexagon;
+import mvc.dialogs.DlgLine;
+import mvc.dialogs.DlgPoint;
 import mvc.dialogs.DlgRectangle;
 import mvc.model.DrawingModel;
 import mvc.view.DrawingView;
@@ -190,6 +197,115 @@ public class DrawingController {
 			hexagon.setFillColor(dialog.getFillColor());
 			Command command = new AddShapeCommand(model, hexagon);
 			commandInvoker.executeCommand(command);
+		}
+	}
+
+	public void deleteSelected() {
+		if (!model.getSelectedShapes().isEmpty()) {
+			List<Shape> shapesToDelete = new ArrayList<>(model.getSelectedShapes());
+			for (Shape shape : shapesToDelete) {
+				Command command = new RemoveShapeCommand(model, shape);
+				commandInvoker.executeCommand(command);
+			}
+			view.repaint();
+		}
+	}
+
+	public void modifySelected() {
+		if (model.getSelectedShapes().size() == 1) {
+			Shape selected = model.getSelectedShapes().get(0);
+
+			if (selected instanceof Point) {
+				modifyPoint((Point) selected);
+			} else if (selected instanceof Line) {
+				modifyLine((Line) selected);
+			} else if (selected instanceof Rectangle) {
+				modifyRectangle((Rectangle) selected);
+			} else if (selected instanceof Circle) {
+				modifyCircle((Circle) selected);
+			} else if (selected instanceof Donut) {
+				modifyDonut((Donut) selected);
+			} else if (selected instanceof HexagonAdapter) {
+				modifyHexagon((HexagonAdapter) selected);
+			}
+		}
+	}
+
+	private void modifyPoint(Point point) {
+		DlgPoint dialog = new DlgPoint((Frame) view.getTopLevelAncestor());
+		dialog.setPoint(point); // Set current values
+		dialog.setVisible(true);
+
+		if (dialog.isConfirmed()) {
+			Point newState = dialog.getPoint(); // Get modified values
+			Command command = new UpdateShapeCommand(model, point, newState);
+			commandInvoker.executeCommand(command);
+			view.repaint();
+		}
+	}
+
+	private void modifyLine(Line line) {
+		DlgLine dialog = new DlgLine((Frame) view.getTopLevelAncestor());
+		dialog.setLine(line);
+		dialog.setVisible(true);
+
+		if (dialog.isConfirmed()) {
+			Line newState = dialog.getLine();
+			Command command = new UpdateShapeCommand(model, line, newState);
+			commandInvoker.executeCommand(command);
+			view.repaint();
+		}
+	}
+
+	private void modifyRectangle(Rectangle rectangle) {
+		DlgRectangle dialog = new DlgRectangle((Frame) view.getTopLevelAncestor());
+		dialog.setRectangle(rectangle);
+		dialog.setVisible(true);
+
+		if (dialog.isConfirmed()) {
+			Rectangle newState = dialog.getRectangle();
+			Command command = new UpdateShapeCommand(model, rectangle, newState);
+			commandInvoker.executeCommand(command);
+			view.repaint();
+		}
+	}
+
+	private void modifyCircle(Circle circle) {
+		DlgCircle dialog = new DlgCircle((Frame) view.getTopLevelAncestor());
+		dialog.setCircle(circle);
+		dialog.setVisible(true);
+
+		if (dialog.isConfirmed()) {
+			Circle newState = dialog.getCircle();
+			Command command = new UpdateShapeCommand(model, circle, newState);
+			commandInvoker.executeCommand(command);
+			view.repaint();
+		}
+	}
+
+	private void modifyDonut(Donut donut) {
+		DlgDonut dialog = new DlgDonut((Frame) view.getTopLevelAncestor());
+		dialog.setDonut(donut);
+		dialog.setVisible(true);
+
+		if (dialog.isConfirmed()) {
+			Donut newState = dialog.getDonut();
+			Command command = new UpdateShapeCommand(model, donut, newState);
+			commandInvoker.executeCommand(command);
+			view.repaint();
+		}
+	}
+
+	private void modifyHexagon(HexagonAdapter hexagon) {
+		DlgHexagon dialog = new DlgHexagon((Frame) view.getTopLevelAncestor());
+		dialog.setHexagon(hexagon);
+		dialog.setVisible(true);
+
+		if (dialog.isConfirmed()) {
+			HexagonAdapter newState = dialog.getHexagon();
+			Command command = new UpdateShapeCommand(model, hexagon, newState);
+			commandInvoker.executeCommand(command);
+			view.repaint();
 		}
 	}
 

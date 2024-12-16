@@ -1,7 +1,6 @@
 package mvc.dialogs;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridLayout;
 
@@ -11,31 +10,31 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
+import shapes.Point;
+import shapes.Rectangle;
+
 public class DlgRectangle extends DlgShape {
-	private JTextField txtWidth;
-	private JTextField txtHeight;
+	private JTextField txtX, txtY, txtWidth, txtHeight;
+	private Rectangle rectangle;
 
 	public DlgRectangle(Frame parent) {
-		super(parent, "Rectangle Properties");
-		setSize(300, 200);
+		super(parent, "Modify Rectangle");
+		setSize(300, 250);
 		setLocationRelativeTo(parent);
-	}
-
-	@Override
-	public void setVisible(boolean visible) {
-		if (visible) {
-			System.out.println("Content panel dimensions: " + contentPanel.getPreferredSize());
-			System.out.println("Button panel dimensions: " + buttonPanel.getPreferredSize());
-		}
-		super.setVisible(visible);
 	}
 
 	@Override
 	protected void initializeComponents() {
 		super.initializeComponents();
-		contentPanel.setPreferredSize(new Dimension(300, 200));
-		buttonPanel.setPreferredSize(new Dimension(300, 50));
-		contentPanel.setLayout(new GridLayout(4, 2, 5, 5));
+		contentPanel.setLayout(new GridLayout(6, 2, 5, 5));
+
+		contentPanel.add(new JLabel("Upper Left Point X:"));
+		txtX = new JTextField(10);
+		contentPanel.add(txtX);
+
+		contentPanel.add(new JLabel("Upper Left Point Y:"));
+		txtY = new JTextField(10);
+		contentPanel.add(txtY);
 
 		contentPanel.add(new JLabel("Width:"));
 		txtWidth = new JTextField(10);
@@ -60,18 +59,27 @@ public class DlgRectangle extends DlgShape {
 				setFillColor(color);
 		});
 		contentPanel.add(btnFillColor);
+	}
 
+	public void setRectangle(Rectangle rectangle) {
+		this.rectangle = rectangle;
+		txtX.setText(String.valueOf(rectangle.getUpperLeftPoint().getX()));
+		txtY.setText(String.valueOf(rectangle.getUpperLeftPoint().getY()));
+		txtWidth.setText(String.valueOf(rectangle.getWidth()));
+		txtHeight.setText(String.valueOf(rectangle.getHeight()));
+		setEdgeColor(rectangle.getEdgeColor());
+		setFillColor(rectangle.getFillColor());
+	}
+
+	public Rectangle getRectangle() {
+		return rectangle;
 	}
 
 	@Override
 	protected boolean validateInput() {
 		try {
-			if (txtWidth.getText().trim().isEmpty() || txtHeight.getText().trim().isEmpty()) {
-				JOptionPane.showMessageDialog(this, "Width and height fields cannot be empty", "Invalid Input",
-						JOptionPane.ERROR_MESSAGE);
-				return false;
-			}
-
+			int x = Integer.parseInt(txtX.getText().trim());
+			int y = Integer.parseInt(txtY.getText().trim());
 			int width = Integer.parseInt(txtWidth.getText().trim());
 			int height = Integer.parseInt(txtHeight.getText().trim());
 
@@ -80,9 +88,16 @@ public class DlgRectangle extends DlgShape {
 						JOptionPane.ERROR_MESSAGE);
 				return false;
 			}
+
+			rectangle.setUpperLeftPoint(new Point(x, y));
+			rectangle.setWidth(width);
+			rectangle.setHeight(height);
+			rectangle.setEdgeColor(getEdgeColor());
+			rectangle.setFillColor(getFillColor());
+
 			return true;
 		} catch (NumberFormatException ex) {
-			JOptionPane.showMessageDialog(this, "Please enter valid numbers for width and height", "Invalid Input",
+			JOptionPane.showMessageDialog(this, "Please enter valid numbers", "Invalid Input",
 					JOptionPane.ERROR_MESSAGE);
 			return false;
 		}

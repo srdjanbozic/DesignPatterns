@@ -30,6 +30,8 @@ public class Frame extends JFrame {
 
 	private JButton btnUndo;
 	private JButton btnRedo;
+	private JButton btnDelete;
+	private JButton btnModify;
 	private LogPanel logPanel;
 
 	public Frame() {
@@ -95,13 +97,23 @@ public class Frame extends JFrame {
 		JPanel undoRedoPanel = new JPanel();
 		btnUndo = new JButton("Undo");
 		btnRedo = new JButton("Redo");
+		btnDelete = new JButton("Delete");
+		btnModify = new JButton("Modify");
+		btnDelete.setEnabled(false);
+		btnModify.setEnabled(false);
 
 		btnUndo.addActionListener(e -> controller.undo());
 		btnRedo.addActionListener(e -> controller.redo());
+		btnDelete.addActionListener(e -> controller.deleteSelected());
+		btnModify.addActionListener(e -> controller.modifySelected());
 
 		undoRedoPanel.add(btnUndo);
 		undoRedoPanel.add(btnRedo);
 		toolbarPanel.add(undoRedoPanel, BorderLayout.EAST);
+		ButtonStateObserver buttonObserver = new ButtonStateObserver(btnDelete, btnModify, model);
+		model.addObserver(buttonObserver);
+		toolbarPanel.add(btnDelete);
+		toolbarPanel.add(btnModify);
 
 		// Add panels to frame
 		Container contentPane = getContentPane();

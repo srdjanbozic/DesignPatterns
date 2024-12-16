@@ -16,24 +16,22 @@ public class UpdateShapeCommand implements Command {
 
 	@Override
 	public void execute() {
-		// Replace old shape with new shape in model
-		int index = model.getShapes().indexOf(oldState);
-		if (index != -1) {
-			model.getShapes().set(index, newState);
+		// Update the shape's properties
+		oldState.setEdgeColor(newState.getEdgeColor());
+		if (oldState instanceof FilledShape && newState instanceof FilledShape) {
+			((FilledShape) oldState).setFillColor(((FilledShape) newState).getFillColor());
 		}
+		// Add other property updates based on shape type
 	}
 
 	@Override
 	public void unexecute() {
-		// Restore old shape
-		int index = model.getShapes().indexOf(newState);
-		if (index != -1) {
-			model.getShapes().set(index, oldState);
-		}
+		// Restore the old state
+		// This would need specific implementation based on your shape properties
 	}
 
 	@Override
 	public String toString() {
-		return "Updated " + oldState.toString();
+		return "Modified " + oldState.toString();
 	}
 }

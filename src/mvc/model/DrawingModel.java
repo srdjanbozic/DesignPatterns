@@ -43,12 +43,14 @@ public class DrawingModel {
 		if (!selectedShapes.contains(shape)) {
 			selectedShapes.add(shape);
 			shape.setSelected(true);
+			notifyObservers();
 		}
 	}
 
 	public void removeFromSelection(Shape shape) {
 		selectedShapes.remove(shape);
 		shape.setSelected(false);
+		notifyObservers();
 	}
 
 	public void clearSelection() {
@@ -56,6 +58,7 @@ public class DrawingModel {
 			shape.setSelected(false);
 		}
 		selectedShapes.clear();
+		notifyObservers();
 	}
 
 	// Getters
@@ -65,5 +68,6 @@ public class DrawingModel {
 
 	public List<Shape> getSelectedShapes() {
 		return selectedShapes;
+
 	}
 }
