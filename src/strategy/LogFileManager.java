@@ -157,18 +157,30 @@ public class LogFileManager implements SaveManager {
 
 	private void recreateLine(String lineInfo) {
 		try {
-			String pointsPart = lineInfo.substring(lineInfo.indexOf("[") + 1, lineInfo.lastIndexOf("]"));
-			String[] points = pointsPart.split("-->");
+			// Remove the "Line[" prefix
+			String content = lineInfo.substring(lineInfo.indexOf("[") + 1);
 
-			String start = points[0].substring(points[0].indexOf("(") + 1, points[0].indexOf(")"));
-			String[] startXY = start.split(",");
-			Point startPoint = new Point(Integer.parseInt(startXY[0].trim()), Integer.parseInt(startXY[1].trim()));
+			// Split by "-->" to get start and end points
+			String[] parts = content.split("-->");
+			if (parts.length < 2) {
+				throw new IllegalArgumentException("Invalid line format: missing '-->' separator");
+			}
 
-			String end = points[1].substring(points[1].indexOf("(") + 1, points[1].indexOf(")"));
-			String[] endXY = end.split(",");
-			Point endPoint = new Point(Integer.parseInt(endXY[0].trim()), Integer.parseInt(endXY[1].trim()));
+			// Parse the start and end points
+			int start = Integer.parseInt(parts[0].trim());
 
+			// For the end point, we need to remove any trailing content
+			String endPart = parts[1];
+			int commaIndex = endPart.indexOf(",");
+			int end = Integer.parseInt(endPart.substring(0, commaIndex).trim());
+
+			// Create points
+			Point startPoint = new Point(start, start);
+			Point endPoint = new Point(end, end);
+
+			// Create and add the line with default black color
 			Line line = new Line(startPoint, endPoint);
+			// No need to set color as it's black by default
 			Command command = new AddShapeCommand(model, line);
 			command.execute();
 		} catch (Exception e) {
@@ -179,21 +191,46 @@ public class LogFileManager implements SaveManager {
 
 	private void recreateRectangle(String rectangleInfo) {
 		try {
-			// Format: "Rectangle[upperLeftPoint=(x,y), width=w, height=h]"
-			String info = rectangleInfo.substring(rectangleInfo.indexOf("[") + 1, rectangleInfo.lastIndexOf("]"));
-			String[] parts = info.split(", ");
+			// Extract coordinates
+			int centerStart = rectangleInfo.indexOf("(");
+			int centerEnd = rectangleInfo.indexOf(",", centerStart);
+			int y_end = rectangleInfo.indexOf(",", centerEnd + 1);
 
-			// Parse point
-			String pointPart = parts[0];
-			String pointCoords = pointPart.substring(pointPart.indexOf("(") + 1, pointPart.indexOf(")"));
-			String[] xy = pointCoords.split(",");
-			Point upperLeft = new Point(Integer.parseInt(xy[0].trim()), Integer.parseInt(xy[1].trim()));
+			int x = Integer.parseInt(rectangleInfo.substring(centerStart + 1, centerEnd).trim());
+			int y = Integer.parseInt(rectangleInfo.substring(centerEnd + 1, y_end).trim());
+			Point upperLeft = new Point(x, y);
 
-			// Parse width and height
-			int width = Integer.parseInt(parts[1].split("=")[1]);
-			int height = Integer.parseInt(parts[2].split("=")[1]);
+			// Extract width and height
+			int heightStart = rectangleInfo.indexOf("height=") + "height=".length();
+			int heightEnd = rectangleInfo.indexOf(",", heightStart);
+			if (heightEnd == -1) {
+				heightEnd = rectangleInfo.indexOf("]", heightStart);
+			}
+			int height = Integer.parseInt(rectangleInfo.substring(heightStart, heightEnd).trim());
 
+			int widthStart = rectangleInfo.indexOf("width=") + "width=".length();
+			int widthEnd = rectangleInfo.indexOf(",", widthStart);
+			if (widthEnd == -1) {
+				widthEnd = rectangleInfo.indexOf("]", widthStart);
+			}
+			int width = Integer.parseInt(rectangleInfo.substring(widthStart, widthEnd).trim());
+
+			// Extract fill color
+			int fillColorStart = rectangleInfo.indexOf("fillColor=rgb(") + "fillColor=rgb(".length();
+			int fillColorEnd = rectangleInfo.indexOf(")", fillColorStart);
+			String[] fillRGB = rectangleInfo.substring(fillColorStart, fillColorEnd).split(",");
+
+			// Clamp RGB values between 0 and 255
+			int r = Math.min(255, Math.max(0, Integer.parseInt(fillRGB[0].trim())));
+			int g = Math.min(255, Math.max(0, Integer.parseInt(fillRGB[1].trim())));
+			int b = Math.min(255, Math.max(0, Integer.parseInt(fillRGB[2].trim())));
+
+			Color fillColor = new Color(r, g, b);
+
+			// Create rectangle with the saved fill color
 			Rectangle rectangle = new Rectangle(upperLeft, height, width);
+			rectangle.setFillColor(fillColor);
+
 			Command command = new AddShapeCommand(model, rectangle);
 			command.execute();
 		} catch (Exception e) {
@@ -203,52 +240,84 @@ public class LogFileManager implements SaveManager {
 	}
 
 	private void recreateCircle(String shapeInfo) {
-		// Očekivani format:
-		// Circle[center=Point(212,152,edgeColor=rgb(0,0,0)),radius=12,edgeColor=rgb(204,0,102),fillColor=rgb(153,255,51)]
+		try {
+			// Extract center point coordinates
+			int centerStart = shapeInfo.indexOf("(");
+			int centerEnd = shapeInfo.indexOf(",", centerStart);
+			int y_end = shapeInfo.indexOf(",", centerEnd + 1);
 
-		// Prvo, parsiraj centar
-		int centerStart = shapeInfo.indexOf("center=Point(");
-		int centerEnd = shapeInfo.indexOf("),radius");
-		String centerStr = shapeInfo.substring(centerStart + "center=Point(".length(), centerEnd);
-		Point center = parsePoint(centerStr); // Pretpostavljamo da je metoda parsePoint ispravno implementirana
+			int x = Integer.parseInt(shapeInfo.substring(centerStart + 1, centerEnd).trim());
+			int y = Integer.parseInt(shapeInfo.substring(centerEnd + 1, y_end).trim());
+			Point center = new Point(x, y);
 
-		// Parsiraj poluprečnik
-		int radiusStart = shapeInfo.indexOf("radius=") + "radius=".length();
-		int radiusEnd = shapeInfo.indexOf(",", radiusStart);
-		int radius = Integer.parseInt(shapeInfo.substring(radiusStart, radiusEnd).trim());
+			// Extract radius
+			int radiusStart = shapeInfo.indexOf("radius=") + "radius=".length();
+			int radiusEnd = shapeInfo.indexOf(",", radiusStart);
+			int radius = Integer.parseInt(shapeInfo.substring(radiusStart, radiusEnd).trim());
 
-		// Parsiraj boje
-		String edgeColorStr = shapeInfo.substring(shapeInfo.indexOf("edgeColor=rgb("),
-				shapeInfo.indexOf("),fillColor"));
-		String fillColorStr = shapeInfo.substring(shapeInfo.indexOf("fillColor=rgb("));
+			// Extract edge color
+			int edgeColorStart = shapeInfo.indexOf("edgeColor=rgb(", radiusEnd) + "edgeColor=rgb(".length();
+			int edgeColorEnd = shapeInfo.indexOf(")", edgeColorStart);
+			String[] edgeRGB = shapeInfo.substring(edgeColorStart, edgeColorEnd).split(",");
+			Color edgeColor = new Color(Integer.parseInt(edgeRGB[0].trim()), Integer.parseInt(edgeRGB[1].trim()),
+					Integer.parseInt(edgeRGB[2].trim()));
 
-		Color edgeColor = parseColor(edgeColorStr);
-		Color fillColor = parseColor(fillColorStr);
+			// Extract fill color
+			int fillColorStart = shapeInfo.indexOf("fillColor=rgb(") + "fillColor=rgb(".length();
+			int fillColorEnd = shapeInfo.indexOf(")", fillColorStart);
+			String[] fillRGB = shapeInfo.substring(fillColorStart, fillColorEnd).split(",");
+			Color fillColor = new Color(Integer.parseInt(fillRGB[0].trim()), Integer.parseInt(fillRGB[1].trim()),
+					Integer.parseInt(fillRGB[2].trim()));
 
-		// Kreiraj objekat Circle sa svim parametrima
-		Circle circle = new Circle(center, radius, edgeColor, fillColor);
-
-		// Dodaj kružnicu u model (ako je model instanca DrawingModel)
-		model.add(circle);
+			// Create and add the circle
+			Circle circle = new Circle(center, radius, edgeColor, fillColor);
+			Command command = new AddShapeCommand(model, circle);
+			command.execute();
+		} catch (Exception e) {
+			System.out.println("Error parsing circle: " + shapeInfo);
+			e.printStackTrace();
+		}
 	}
 
 	private void recreateDonut(String donutInfo) {
 		try {
-			// Format: "Donut[center=Point(465,253), radius=566, inner radius=56]"
-			String info = donutInfo.substring(donutInfo.indexOf("[") + 1, donutInfo.lastIndexOf("]"));
-			String[] parts = info.split(", ");
+			// Extract center point coordinates
+			int centerStart = donutInfo.indexOf("(");
+			int centerEnd = donutInfo.indexOf(",", centerStart);
+			int y_end = donutInfo.indexOf(",", centerEnd + 1);
 
-			// Parse center point
-			String centerPart = parts[0];
-			String centerCoords = centerPart.substring(centerPart.indexOf("(") + 1, centerPart.indexOf(")"));
-			String[] xy = centerCoords.split(",");
-			Point center = new Point(Integer.parseInt(xy[0].trim()), Integer.parseInt(xy[1].trim()));
+			int x = Integer.parseInt(donutInfo.substring(centerStart + 1, centerEnd).trim());
+			int y = Integer.parseInt(donutInfo.substring(centerEnd + 1, y_end).trim());
+			Point center = new Point(x, y);
 
-			// Parse outer radius and inner radius
-			int radius = Integer.parseInt(parts[1].split("=")[1]);
-			int innerRadius = Integer.parseInt(parts[2].split("=")[1]);
+			// Extract radius
+			int radiusStart = donutInfo.indexOf("radius=") + "radius=".length();
+			int radiusEnd = donutInfo.indexOf(",", radiusStart);
+			int radius = Integer.parseInt(donutInfo.substring(radiusStart, radiusEnd).trim());
 
+			// Extract inner radius
+			int innerRadiusStart = donutInfo.indexOf("innerRadius=") + "innerRadius=".length();
+			int innerRadiusEnd = donutInfo.indexOf(",", innerRadiusStart);
+			int innerRadius = Integer.parseInt(donutInfo.substring(innerRadiusStart, innerRadiusEnd).trim());
+
+			// Extract edge color
+			int edgeColorStart = donutInfo.indexOf("edgeColor=rgb(", innerRadiusEnd) + "edgeColor=rgb(".length();
+			int edgeColorEnd = donutInfo.indexOf(")", edgeColorStart);
+			String[] edgeRGB = donutInfo.substring(edgeColorStart, edgeColorEnd).split(",");
+			Color edgeColor = new Color(Integer.parseInt(edgeRGB[0].trim()), Integer.parseInt(edgeRGB[1].trim()),
+					Integer.parseInt(edgeRGB[2].trim()));
+
+			// Extract fill color
+			int fillColorStart = donutInfo.indexOf("fillColor=rgb(") + "fillColor=rgb(".length();
+			int fillColorEnd = donutInfo.indexOf(")", fillColorStart);
+			String[] fillRGB = donutInfo.substring(fillColorStart, fillColorEnd).split(",");
+			Color fillColor = new Color(Integer.parseInt(fillRGB[0].trim()), Integer.parseInt(fillRGB[1].trim()),
+					Integer.parseInt(fillRGB[2].trim()));
+
+			// Create and add the donut
 			Donut donut = new Donut(center, radius, innerRadius);
+			donut.setEdgeColor(edgeColor);
+			donut.setFillColor(fillColor);
 			Command command = new AddShapeCommand(model, donut);
 			command.execute();
 		} catch (Exception e) {
