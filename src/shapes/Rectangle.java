@@ -86,6 +86,8 @@ public class Rectangle extends Shape {
 
 	@Override
 	public String toString() {
-		return "Rectangle[" + upperLeftPoint + ", width=" + width + ", height=" + height + "]";
+		return String.format("Rectangle[%s,width=%d,height=%d,edgeColor=rgb(%d,%d,%d),fillColor=rgb(%d,%d,%d)]",
+				upperLeftPoint, width, height, getEdgeColor().getRed(), getEdgeColor().getGreen(),
+				getEdgeColor().getBlue(), getFillColor().getRed(), getFillColor().getGreen(), getFillColor().getBlue());
 	}
 }

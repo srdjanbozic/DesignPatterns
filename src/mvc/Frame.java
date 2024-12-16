@@ -107,7 +107,7 @@ public class Frame extends JFrame {
 		Container contentPane = getContentPane();
 		contentPane.add(toolbarPanel, BorderLayout.NORTH);
 		contentPane.add(view, BorderLayout.CENTER);
-		logPanel = new LogPanel();
+		logPanel = new LogPanel(model);
 		contentPane.add(logPanel, BorderLayout.EAST);
 		// In Frame's initializeComponents(), after creating logPanel:
 		Logger.getInstance().addObserver(logPanel);

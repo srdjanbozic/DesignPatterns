@@ -31,9 +31,8 @@ public class Logger {
 
 	private void notifyObservers() {
 		for (LogObserver observer : observers) {
-			observer.onlogUpdated();
+			observer.onLogUpdated();
 		}
-
 	}
 
 	public List<String> getLog() {
@@ -42,5 +41,13 @@ public class Logger {
 
 	public void clearLog() {
 		commandLog.clear();
+		notifyObservers(); // Added notification
+	}
+
+	// Add this method for loading logs
+	public void setLog(List<String> log) {
+		commandLog.clear();
+		commandLog.addAll(log);
+		notifyObservers();
 	}
 }

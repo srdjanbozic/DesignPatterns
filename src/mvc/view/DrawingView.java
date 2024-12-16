@@ -5,13 +5,20 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 import mvc.model.DrawingModel;
+import mvc.model.DrawingModelObserver;
 import shapes.Shape;
 
-public class DrawingView extends JPanel {
+public class DrawingView extends JPanel implements DrawingModelObserver {
 	private DrawingModel model;
 
 	public DrawingView(DrawingModel model) {
 		this.model = model;
+		model.addObserver(this);
+	}
+
+	@Override
+	public void update() {
+		repaint();
 	}
 
 	@Override
@@ -26,5 +33,11 @@ public class DrawingView extends JPanel {
 
 	public DrawingModel getModel() {
 		return model;
+	}
+
+	public void repaint() {
+		if (model != null) {
+			super.repaint();
+		}
 	}
 }

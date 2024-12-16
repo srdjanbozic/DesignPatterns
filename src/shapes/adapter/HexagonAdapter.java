@@ -68,6 +68,8 @@ public class HexagonAdapter extends Shape {
 
 	@Override
 	public String toString() {
-		return "Hexagon[center=(" + hexagon.getX() + "," + hexagon.getY() + "), radius=" + hexagon.getR() + "]";
+		return String.format("Hexagon[center=(%d,%d),radius=%d,edgeColor=rgb(%d,%d,%d),fillColor=rgb(%d,%d,%d)]",
+				hexagon.getX(), hexagon.getY(), hexagon.getR(), getEdgeColor().getRed(), getEdgeColor().getGreen(),
+				getEdgeColor().getBlue(), getFillColor().getRed(), getFillColor().getGreen(), getFillColor().getBlue());
 	}
 }
